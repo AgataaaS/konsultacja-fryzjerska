@@ -1,106 +1,103 @@
 import streamlit as st
+import replicate
+import os
 
-st.set_page_config(page_title="Cyfrowa Konsultacja Fryzjerska", page_icon="✂️")
+st.set_page_config(page_title="Cyfrowa Konsultacja Fryzjerska AI", page_icon="✂️")
 
-st.title("✂️ Wirtualna Konsultacja Fryzjerska")
-st.write("Witaj! Odpowiedz na kilka pytań i prześlij zdjęcie swoich włosów, abyśmy mogły dobrać idealną fryzurę i plan pielęgnacyjny.")
+st.title("✂️ Wirtualna Metamorfoza Fryzjerska AI")
+st.write("Witaj! Prześlij swoje zdjęcie i odpowiedz na pytania, aby sztuczna inteligencja wygenerowała Twoją nową fryzurę!")
 
-# Formularz konsultacyjny
+# --- BAZA WZORCÓW I INSPIRACJI DLA AI ---
+BAZA_STYLE = [
+    {
+        "nazwa": "Klasyczny Bob z prostą linią",
+        "tekstura": "Proste",
+        "prompt_ai": "straight sleek bob haircut, short hair, natural hairline, realistic hair texture, professional salon styling",
+        "zdjecie_referencyjne": "bob.jpg"
+    },
+    {
+        "nazwa": "Soft Waves - Miękkie Fale",
+        "tekstura": "Lekko się falują / wywijają",
+        "prompt_ai": "medium length wavy hair, soft beach waves haircut, volume at roots, natural hair flow",
+        "zdjecie_referencyjne": "waves.jpg"
+    },
+    {
+        "nazwa": "Curly Shag / Zdefiniowany Skręt",
+        "tekstura": "Kręcone / mocny skręt",
+        "prompt_ai": "short curly shag haircut, defined natural curls, volumetric curly hair, layered curls",
+        "zdjecie_referencyjne": "pixie.jpg"
+    }
+]
+
+# Formularz
 with st.form("konsultacja_form"):
-    
-    st.subheader("1. Zmiana i stylizacja")
-    poziom_zmiany = st.radio(
-        "Jakiej zmiany dzisiaj potrzebujesz?",
-        ["Duża zmiana (całkowita metamorfoza)", "Umiarkowana zmiana (odświeżenie stylu)", "Mała zmiana (podcięcie / lekka korekta)"]
-    )
-    
-    st.subheader("2. Tekstura, objętość i ciężar włosów")
+    st.subheader("1. Tekstura i oczekiwania")
     tekstura = st.radio(
-        "Jaka jest naturalna struktura Twoich włosów?",
+        "Jaka jest Twoja naturalna struktura włosów?",
         ["Proste", "Lekko się falują / wywijają", "Kręcone / mocny skręt"]
     )
     
     cel_skretu = st.radio(
-        "Co chciałabyś osiągnąć z teksturą włosów?",
+        "Preferujesz fryzurę zgodną z Twoim skrętem?",
         [
-            "Chcę wydobyć i podkreślić skręt / fale (więcej objętości i skrętu)",
-            "Chcę je wygładzić / wyprostować (ułatwić stylizację na gładko)",
-            "Podoba mi się obecny stan, chcę tylko dobrego cięcia"
+            "Tak, chcę fryzurę dopasowaną do mojego skrętu",
+            "Chcę zobaczyć wygładzoną / wyprostowaną wersję"
         ]
     )
 
-    objetosc = st.radio(
-        "Jak oceniasz obecną objętość i ciężar swoich włosów?",
-        [
-            "Jestem zadowolona z obecnej objętości",
-            "Chciałabym mieć optycznie więcej objętości (włosy są przyklapnięte/cienkie)",
-            "Chciałabym mieć mniej objętości / mam poczucie, że są za ciężkie i grube"
-        ]
-    )
-
-    st.subheader("3. Koloryzacja")
-    zmiana_koloru = st.radio(
-        "Czy jesteś otwarta na zmianę koloru?",
-        ["Tak", "Nie"]
-    )
-    
-    gotowosc_retusz = "Nie dotyczy"
-    if zmiana_koloru == "Tak":
-        gotowosc_retusz = st.radio(
-            "Czy jesteś gotowa na regularne wizyty w salonie co miesiąc (odrosty/tonowanie)?",
-            ["Tak, mogę przychodzić co miesiąc", "Nie, wolę coś niewymagającego częstych wizyt"]
-        )
-
-    st.subheader("4. Twoje obecne zdjęcie")
-    st.write("Wgraj zdjęcie obecnych włosów (najlepiej w naturalnym świetle):")
+    st.subheader("2. Twoje zdjęcie twarzy")
+    st.write("Wgraj wyraźne zdjęcie twarzy z dobrze widoczną linią włosów:")
     uploaded_file = st.file_uploader("Wybierz zdjęcie z telefonu lub komputera", type=["jpg", "jpeg", "png"])
 
-    st.subheader("5. Kontakt do Ciebie")
-    kontakt = st.text_input("Podaj swój numer telefonu lub nazwę na Instagramie, żebym mogła wysłać Ci indywidualną ocenę wykonalności:")
+    st.subheader("3. Kontakt")
+    kontakt = st.text_input("Podaj numer telefonu lub Instagram:")
 
-    submitted = st.form_submit_button("Wyślij konsultację do fryzjera")
+    submitted = st.form_submit_button("🎨 Wygeneruj moją metamorfozę AI")
 
-# Obsługa po wysłaniu formularza
+# GENEROWANIE PRZEZ AI
 if submitted:
-    st.divider()
-    st.header("📋 Twoja wstępna analiza i scenariusz")
-    
-    if uploaded_file is not None:
-        st.image(uploaded_file, caption="Twoje wgrane zdjęcie", width=300)
-        st.info("📸 Dziękujemy za przesłanie zdjęcia! Przeanalizuję porowatość, gęstość oraz długość Twoich włosów i skontaktuję się z Tobą podanym kontaktem.")
-    
-    # Rekomendacje dotyczące cięcia, objętości i tekstury
-    st.subheader("💡 Wskazówki dotyczące cięcia i objętości:")
-    
-    # Analiza objętości
-    if "więcej objętości" in objetosc:
-        st.markdown("""
-        * **Objętość & Lekkość:** Zaproponujemy cięcie unoszące włosy u nasady (np. odpowiednie warstwowanie / cieniowanie) oraz lekkie kosmetyki bezciężarowe, które nie obciążają pasm.
-        """)
-    elif "mniej objętości" in objetosc:
-        st.markdown("""
-        * **Redukcja ciężaru:** Wykonamy techniczne odciążenie/spersonalizowane teksturowanie od wewnątrz, aby włosy układały się lżej i nie tworzyły „efektu trójkąta”.
-        """)
+    if uploaded_file is None:
+        st.error("Proszę najpierw wgrać zdjęcie twarzy!")
     else:
-        st.markdown("""
-        * **Objętość:** Zachowamy obecną proporcję i ciężar, skupiając się jedynie na nadaniu czystej formy i linii.
-        """)
+        st.divider()
+        st.header("✨ Twój Wynik Metamorfozy AI")
+        
+        col_orig, col_ai = st.columns(2)
+        with col_orig:
+            st.image(uploaded_file, caption="Twoje obecne zdjęcie", use_container_width=True)
+            
+        # Wybór odpowiedniego stylu z bazy na podstawie filtra
+        wybrana_fryzura = BAZA_STYLE[0] # Domyślna
+        for style in BAZA_STYLE:
+            if style["tekstura"] == tekstura:
+                wybrana_fryzura = style
+                break
 
-    # Analiza skrętu
-    if "podkreślić" in cel_skretu:
-        st.markdown("""
-        * **Tekstura:** Cięcie dopasowane do naturalnego układy skrętu (często cięcie na sucho lub dedykowane włosom falowanym), połączenie z wgniataniem stylizatora na mokro.
-        """)
-    elif "wygładzić" in cel_skretu:
-        st.markdown("""
-        * **Tekstura:** Postawimy na zwarta linię cięcia i domykające łuskę zabiegi pielęgnacyjne ułatwiające wygładzanie na szczotce.
-        """)
+        with col_ai:
+            with st.spinner("AI analizuje Twoją twarz i nakłada nową fryzurę... To może zająć około 15-30 sekund."):
+                try:
+                    # Pobranie tokenu API ze Streamlit Secrets
+                    api_token = st.secrets.get("REPLICATE_API_TOKEN") or os.environ.get("REPLICATE_API_TOKEN")
+                    
+                    if not api_token:
+                        st.error("Brak skonfigurowanego klucza REPLICATE_API_TOKEN w Secrets Streamlit.")
+                    else:
+                        # Wywołanie generowania
+                        output = replicate.run(
+                            "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
+                            input={
+                                "image": uploaded_file,
+                                "prompt": f"photo of the person in the image with {wybrana_fryzura['prompt_ai']}, same face, realistic salon lighting, 8k quality",
+                                "negative_prompt": "long hair, curly if straight selected, distorted face, extra limbs, unrealistic texture",
+                                "prompt_strength": 0.65
+                            }
+                        )
+                        
+                        if output:
+                            st.image(output[0], caption=f"Rekomendacja: {wybrana_fryzura['nazwa']}", use_container_width=True)
+                            st.success("Gotowe! Oto jak możesz wyglądać w nowej odsłonie.")
+                        else:
+                            st.warning("Nie udało się wygenerować obrazu. Spróbuj ponownie.")
 
-    # Rekomendacje koloryzacyjne
-    st.subheader("🎨 Scenariusz koloryzacji:")
-    if zmiana_koloru == "Tak" and "Tak, mogę" in gotowosc_retusz:
-        st.success("🟢 **Plan:** Pełna zmiana tonalna / jasny blond z regularnym planem tonowania co 4 tygodnie.")
-    elif zmiana_koloru == "Tak" and "Nie, wolę" in gotowosc_retusz:
-        st.warning("🟡 **Plan:** Techniki z miękkim odrostem (*Soft Balayage / AirTouch*), które odrastają naturalnie bez konieczności częstych poprawek.")
-    else:
-        st.info("🔵 **Plan:** Focus na naturze i pielęgnacji połysku (np. zabieg glossingowy).")
+                except Exception as e:
+                    st.error(f"Wystąpił błąd podczas generowania AI: {str(e)}")
